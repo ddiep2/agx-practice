@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Irrigation Helper</title>
+  <style>
+    body { font-family: sans-serif; max-width: 600px; margin: 40px auto; }
+    table { border-collapse: collapse; width: 100%; margin-top: 16px; }
+    th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+  </style>
+</head>
+<body>
+  <h1>Tucson Irrigation Helper</h1>
+  <button id="load-btn">Get 3 day forecast</button>
+  <p id="message"></p>
+
+  <table id="results" hidden>
+    <thead>
+      <tr><th>Date</th><th>High (°C)</th><th>Rain (mm)</th><th>Water loss (mm)</th></tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <script>
+    const btn = document.getElementById("load-btn");
+    const message = document.getElementById("message");
+    const table = document.getElementById("results");
+    const tbody = table.querySelector("tbody");
+
+    btn.addEventListener("click", async () => {
+      message.textContent = "Loading...";
+      try {
+        const res = await fetch("/api/weather");
+        if (!res.ok) throw new Error("Server returned " + res.status);
+        const data = await res.json();
+
+        tbody.innerHTML = "";
+        for (let i = 0; i < data.time.length; i++) {
+          const row = document.createElement("tr");
+          row.innerHTML = `<td>${data.time[i]}</td>
+                           <td>${data.temperature_2m_max[i]}</td>
+                           <td>${data.precipitation_sum[i]}</td>
+                           <td>${data.et0_fao_evapotranspiration[i]}</td>`;
+          tbody.appendChild(row);
+        }
+        table.hidden = false;
+        message.textContent = "";
+      } catch (err) {
+        message.textContent = "Error: " + err.message;
+      }
+    });
+  </script>
+</body>
+</html>
